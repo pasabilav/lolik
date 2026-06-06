@@ -39,19 +39,27 @@
   }
 
   #app {
-    width: 100%; height: 100%;
-    height: 100dvh;
-    display: flex; flex-direction: column;
+    width: 100%;
+    height: 100vh; /* Запасной вариант */
+    height: 100dvh; /* Точная высота мобильного экрана с учетом панелей браузера */
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     position: relative;
   }
 
   /* ─── SCREENS ─── */
   .screen {
-    position: absolute; inset: 0;
-    height: 100%; height: 100dvh;
-    display: flex; flex-direction: column;
-    opacity: 0; pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%; /* Строго наследует полную высоту от #app */
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
     transition: opacity 0.22s ease, transform 0.28s ease;
     transform: translateX(24px);
   }
@@ -197,19 +205,23 @@
   ══════════════════════════════ */
 
   .animated-bg {
-    position: relative;
+    width: 100%;
+    height: 100%;
   }
   .animated-bg::before {
     content: '';
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 0;
     background:
-      radial-gradient(ellipse 120% 80% at 0% 0%,   #dde87a 0%, transparent 50%),
-      radial-gradient(ellipse 100% 80% at 100% 0%,  #58c8d8 0%, transparent 50%),
-      radial-gradient(ellipse 100% 80% at 100% 100%, #c8a0e0 0%, transparent 50%),
-      radial-gradient(ellipse 120% 80% at 0% 100%,  #f0b8c8 0%, transparent 50%),
-      #a8d0d8;
+            radial-gradient(ellipse 120% 80% at 0% 0%,   #dde87a 0%, transparent 50%),
+            radial-gradient(ellipse 100% 80% at 100% 0%,  #58c8d8 0%, transparent 50%),
+            radial-gradient(ellipse 100% 80% at 100% 100%, #c8a0e0 0%, transparent 50%),
+            radial-gradient(ellipse 120% 80% at 0% 100%,  #f0b8c8 0%, transparent 50%),
+            #a8d0d8;
     background-size: 300% 300%;
     animation: diiaSmooth 12s ease-in-out infinite;
   }
@@ -270,17 +282,13 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    /* Тот же градиент что и у .animated-bg::before — карточка сливается с фоном */
-    background:
-      radial-gradient(ellipse 120% 80% at 0% 0%,   #dde87a 0%, transparent 50%),
-      radial-gradient(ellipse 100% 80% at 100% 0%,  #58c8d8 0%, transparent 50%),
-      radial-gradient(ellipse 100% 80% at 100% 100%, #c8a0e0 0%, transparent 50%),
-      radial-gradient(ellipse 120% 80% at 0% 100%,  #f0b8c8 0%, transparent 50%),
-      #a8d0d8;
-    background-size: 300% 300%;
-    animation: diiaSmooth 12s ease-in-out infinite;
-    border: 1px solid rgba(255,255,255,0.4);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+    /* Полупрозрачный белый фон, пропускающий и насыщающий нижний слой */
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(25px) saturate(130%);
+    -webkit-backdrop-filter: blur(25px) saturate(130%);
+    /* Тонкая аккуратная светлая рамка */
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     transition: transform 0.2s ease;
     display: flex; flex-direction: column;
   }
@@ -703,7 +711,7 @@
                 </div>
                 <div class="doc-card-fields">
                   <div class="doc-field-label">Дата<br>народження:</div>
-                  <div class="doc-field-value">13.02.1995</div>
+                  <div class="doc-field-value">13.02.2003</div>
                   <div class="doc-field-label">РНОКПП:</div>
                   <div class="doc-field-value">3474211794</div>
                 </div>
