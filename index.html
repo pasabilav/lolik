@@ -1,115 +1,1118 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Дія">
+<meta name="theme-color" content="#000000">
+<title>Дія</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#b0c8e0">
+<style>
+  :root {
+    --safe-top: env(safe-area-inset-top, 54px);
+    --safe-bottom: env(safe-area-inset-bottom, 34px);
+    --nav-h: 83px;
+    /* Diia light blue background */
+    --bg-home: #c8d9e8;
+    --bg-docs: linear-gradient(160deg, #5fc4c0 0%, #7ec8d0 25%, #a0c8d8 50%, #b8c8d8 70%, #c8b8d0 85%, #d4b8c8 100%);
+    --card-bg: rgba(255,255,255,0.72);
+    --card-blur: blur(20px) saturate(160%);
+    --green-strip: #a8e063;
+    --text-primary: #000;
+    --text-secondary: #555;
+    --radius-card: 22px;
+  }
 
-    <meta name="apple-mobile-web-app-title" content="Дія">
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    <link rel="apple-touch-icon" href="img/logo_180.png">
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    color: #000;
+    -webkit-font-smoothing: antialiased;
+    background: #000; /* чёрный под nav — не будет просвечивать белое */
+  }
 
-    <link rel="manifest" href="/manifest.json">
+  #app {
+    width: 100%; height: 100%;
+    height: 100dvh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
 
-    <title>єДокумент</title>
-    <link rel="stylesheet" href="style.css">
+  /* ─── SCREENS ─── */
+  .screen {
+    position: absolute; inset: 0;
+    height: 100%; height: 100dvh;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.28s ease;
+    transform: translateX(24px);
+  }
+  .screen.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+  .screen.out { opacity: 0; transform: translateX(-24px); }
+
+  /* ─── STATUS BAR SPACER ─── */
+  .status-bar { height: var(--safe-top); flex-shrink: 0; }
+
+  /* ══════════════════════════════
+     СТРІЧКА (HOME)
+  ══════════════════════════════ */
+  #screen-home {
+    background: var(--bg-home);
+  }
+  #screen-home .content {
+    flex: 1; overflow-y: auto; padding-bottom: calc(var(--nav-h) + 8px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-greeting {
+    padding: 8px 20px 24px;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    color: #000;
+  }
+
+  /* Незламність card */
+  .nezlam-card {
+    margin: 0 16px 24px;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px;
+    padding: 20px 20px 16px;
+    position: relative;
+  }
+  .nezlam-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .nezlam-desc { font-size: 14px; color: #333; line-height: 1.45; margin-bottom: 16px; }
+  .nezlam-footer { display: flex; align-items: center; justify-content: space-between; }
+  .nezlam-icons { display: flex; gap: -4px; }
+  .nezlam-icon-badge {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; margin-right: -6px;
+    border: 2px solid rgba(255,255,255,0.82);
+  }
+  .arrow-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #000; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .arrow-btn svg { width: 20px; height: 20px; fill: white; }
+
+  /* Quick actions row */
+  .quick-actions {
+    display: flex; gap: 0;
+    padding: 0 12px 24px;
+    justify-content: space-around;
+  }
+  .quick-action-item {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    cursor: pointer; flex: 1; max-width: 110px;
+  }
+  .quick-action-item:active .qa-icon { transform: scale(0.93); }
+  .qa-icon {
+    width: 72px; height: 72px; border-radius: 18px;
+    background: #111;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s;
+  }
+  .qa-icon svg { width: 34px; height: 34px; fill: white; }
+  .qa-label { font-size: 13px; font-weight: 400; color: #000; text-align: center; line-height: 1.3; }
+
+  /* Drone banner */
+  .drone-banner {
+    margin: 0 16px 24px;
+    border-radius: 20px;
+    overflow: hidden;
+    height: 180px;
+    position: relative;
+    background: #1a2015;
+    cursor: pointer;
+  }
+  .drone-banner-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 50%, rgba(40,55,30,0.9) 0%, transparent 60%),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 30px,
+        rgba(255,255,255,0.015) 30px,
+        rgba(255,255,255,0.015) 31px
+      );
+  }
+  .drone-banner-shields {
+    position: absolute; inset: 0; opacity: 0.18;
+    background-image:
+      radial-gradient(circle at 70% 30%, rgba(255,255,255,0.3) 0%, transparent 30%),
+      radial-gradient(circle at 85% 70%, rgba(255,255,255,0.2) 0%, transparent 25%);
+  }
+  .drone-banner-content {
+    position: relative; z-index: 2;
+    padding: 24px 20px;
+    height: 100%;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .drone-title-row { display: flex; align-items: center; gap: 14px; }
+  .drone-logo-box {
+    width: 52px; height: 52px; border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.5);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .drone-logo-box svg { width: 30px; height: 30px; fill: white; }
+  .drone-title { font-size: 28px; font-weight: 800; color: white; line-height: 1.1; letter-spacing: -0.3px; }
+  .drone-footer { display: flex; align-items: center; justify-content: space-between; }
+  .drone-cta { font-size: 17px; font-weight: 600; color: white; }
+  .arrow-btn-white { width: 36px; height: 36px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; }
+  .arrow-btn-white svg { width: 18px; height: 18px; fill: #000; }
+
+  /* Кешбек card */
+  .cashback-card {
+    margin: 0 16px 16px;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px;
+    padding: 20px 20px 16px;
+  }
+  .cashback-amount { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .cashback-label { font-size: 14px; color: #444; margin-bottom: 16px; }
+  .cashback-bars { display: flex; gap: 3px; height: 24px; margin-bottom: 4px; }
+  .cashback-bar { width: 18px; border-radius: 4px; }
+  .cashback-footer { display: flex; justify-content: flex-end; }
+
+  /* ══════════════════════════════
+     АНИМИРОВАННЫЙ ГРАДИЕНТ
+     Плавное переливание как в Дії:
+     жёлто-зелёный → голубой → лаванда → розовый → снова
+  ══════════════════════════════ */
+
+  .animated-bg {
+    position: relative;
+  }
+  .animated-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 120% 80% at 0% 0%,   #dde87a 0%, transparent 50%),
+      radial-gradient(ellipse 100% 80% at 100% 0%,  #58c8d8 0%, transparent 50%),
+      radial-gradient(ellipse 100% 80% at 100% 100%, #c8a0e0 0%, transparent 50%),
+      radial-gradient(ellipse 120% 80% at 0% 100%,  #f0b8c8 0%, transparent 50%),
+      #a8d0d8;
+    background-size: 300% 300%;
+    animation: diiaSmooth 12s ease-in-out infinite;
+  }
+
+  @keyframes diiaSmooth {
+    0%   { background-position: 0% 0%; }
+    25%  { background-position: 100% 0%; }
+    50%  { background-position: 100% 100%; }
+    75%  { background-position: 0% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+
+  /* дочерние элементы поверх псевдоэлемента */
+  .animated-bg .status-bar,
+  .animated-bg .docs-screen-content,
+  .animated-bg .content {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Docs carousel container */
+  .docs-screen-content {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; z-index: 1;
+    padding-bottom: calc(var(--nav-h) + 12px);
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .docs-carousel-outer {
+    width: 100%; flex: 1;
+    display: flex; align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .docs-carousel {
+    display: flex;
+    gap: 14px;
+    padding: 20px 20px 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    width: 100%;
+    align-items: center;
+  }
+  .docs-carousel::-webkit-scrollbar { display: none; }
+
+  /* ─── DOCUMENT CARD — цвет как у фона ─── */
+  .doc-card-new {
+    min-width: calc(100vw - 80px);
+    max-width: 360px;
+    border-radius: var(--radius-card);
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    /* Тот же градиент что и у .animated-bg::before — карточка сливается с фоном */
+    background:
+      radial-gradient(ellipse 120% 80% at 0% 0%,   #dde87a 0%, transparent 50%),
+      radial-gradient(ellipse 100% 80% at 100% 0%,  #58c8d8 0%, transparent 50%),
+      radial-gradient(ellipse 100% 80% at 100% 100%, #c8a0e0 0%, transparent 50%),
+      radial-gradient(ellipse 120% 80% at 0% 100%,  #f0b8c8 0%, transparent 50%),
+      #a8d0d8;
+    background-size: 300% 300%;
+    animation: diiaSmooth 12s ease-in-out infinite;
+    border: 1px solid rgba(255,255,255,0.4);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+    transition: transform 0.2s ease;
+    display: flex; flex-direction: column;
+  }
+  .doc-card-new:active { transform: scale(0.98); }
+
+  .doc-card-upper {
+    padding: 22px 20px 20px;
+    flex: 1;
+  }
+  .doc-card-type {
+    font-size: 20px; font-weight: 700;
+    color: #000; margin-bottom: 18px;
+    line-height: 1.2;
+  }
+  .doc-card-photo-row {
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .doc-card-photo {
+    width: 120px; height: 150px;
+    border-radius: 10px;
+    background: rgba(200,210,220,0.5);
+    flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .doc-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .doc-card-photo svg { width: 56px; height: 56px; fill: rgba(0,0,0,0.2); }
+  .doc-card-fields { flex: 1; padding-top: 4px; }
+  .doc-field-label {
+    font-size: 13px; color: #444; line-height: 1.3;
+    margin-bottom: 1px;
+  }
+  .doc-field-value {
+    font-size: 15px; font-weight: 400; color: #000;
+    margin-bottom: 14px; line-height: 1.3;
+  }
+
+  /* no-photo layout */
+  .doc-card-fields-only { padding: 0; }
+  .doc-field-label-only { font-size: 14px; color: #444; margin-bottom: 2px; line-height: 1.3; }
+  .doc-field-value-only { font-size: 16px; color: #000; margin-bottom: 16px; line-height: 1.3; }
+
+  /* ── Бегущая зелёная полоска ── */
+  .doc-card-strip {
+    background: var(--green-strip);
+    padding: 8px 0;
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .doc-card-strip-inner {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: marquee 18s linear infinite;
+    font-size: 13px;
+    color: #1a3a00;
+    font-weight: 400;
+    padding-left: 100%;
+  }
+  .doc-card-strip-inner span { padding-right: 60px; }
+
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Footer: name + horizontal ••• button */
+  .doc-card-footer {
+    padding: 14px 20px 18px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .doc-card-fullname {
+    font-size: 22px; font-weight: 700;
+    color: #000; line-height: 1.2;
+  }
+  /* ••• горизонтально, круглая подложка */
+  .doc-more-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #111;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  /* горизонтальные три точки через SVG */
+  .doc-more-btn svg { width: 20px; height: 20px; fill: white; }
+
+  /* РНОКПП card number display */
+  .doc-rnokpp-num {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px 18px;
+  }
+  .doc-rnokpp-num span { font-size: 30px; font-weight: 700; color: #000; }
+  .doc-copy-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .doc-copy-btn svg { width: 22px; height: 22px; fill: #555; }
+
+  /* Dot indicators — всегда круг, активный просто белый и чуть крупнее */
+  .docs-dots {
+    display: flex; gap: 8px; justify-content: center;
+    padding: 12px 0 4px;
+    position: relative; z-index: 1;
+  }
+  .docs-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    transition: background 0.3s, transform 0.3s;
+    flex-shrink: 0;
+  }
+  .docs-dot.active {
+    background: white;
+    transform: scale(1.25);
+  }
+
+  /* ══════════════════════════════
+     СЕРВІСИ
+  ══════════════════════════════ */
+  #screen-services {
+    background: #c8d9e8; /* fallback */
+  }
+  #screen-services .content {
+    flex: 1; overflow-y: auto;
+    padding: 0 16px calc(var(--nav-h) + 8px);
+    -webkit-overflow-scrolling: touch;
+  }
+  .services-page-title {
+    font-size: 30px; font-weight: 700; padding: 8px 0 16px;
+  }
+  .services-search {
+    background: white;
+    border-radius: 14px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .services-search svg { width: 18px; height: 18px; fill: #aaa; flex-shrink: 0; }
+  .services-search span { font-size: 16px; color: #aaa; }
+  .services-grid-new {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .service-tile {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 16px 16px 20px;
+    cursor: pointer;
+    transition: transform 0.15s;
+    min-height: 110px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .service-tile:active { transform: scale(0.96); }
+  .service-tile-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #111;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .service-tile-icon svg { width: 22px; height: 22px; fill: white; }
+  .service-tile-label { font-size: 14px; font-weight: 400; color: #000; line-height: 1.3; }
+
+  /* ══════════════════════════════
+     МЕНЮ
+  ══════════════════════════════ */
+  #screen-menu {
+    background: #c8d9e8; /* fallback */
+  }
+  #screen-menu .content {
+    flex: 1; overflow-y: auto;
+    padding: 0 16px calc(var(--nav-h) + 20px);
+    -webkit-overflow-scrolling: touch;
+  }
+  .menu-title { font-size: 30px; font-weight: 700; padding: 8px 0 4px; }
+  .menu-version { font-size: 13px; color: #888; margin-bottom: 24px; }
+
+  .menu-group {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .menu-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .menu-row:last-child { border-bottom: none; }
+  .menu-row:active { background: #f8f8f8; }
+  .menu-row-icon { width: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .menu-row-icon svg { width: 22px; height: 22px; fill: #000; }
+  .menu-row-label { font-size: 16px; color: #000; flex: 1; }
+
+  .menu-logout-btn {
+    margin: 8px 16px 0;
+    background: #000;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    width: calc(100% - 32px);
+    padding: 18px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .menu-logout-btn:active { opacity: 0.8; }
+
+  /* ══════════════════════════════
+     BOTTOM NAV (black Diia style)
+  ══════════════════════════════ */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(60px + var(--safe-bottom));
+    background: #000;
+    display: flex; align-items: flex-start; justify-content: space-around;
+    padding: 10px 0 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; flex: 1; padding: 0 4px;
+    transition: opacity 0.15s;
+  }
+  .nav-item:active { opacity: 0.6; }
+  .nav-icon-wrap {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .nav-icon-wrap svg { width: 26px; height: 26px; fill: rgba(255,255,255,0.45); transition: fill 0.15s; }
+  .nav-item.active .nav-icon-wrap svg { fill: white; }
+  /* active nav bg pill */
+  .nav-item.active .nav-icon-wrap::before {
+    content: '';
+    position: absolute; inset: -5px -10px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 10px;
+  }
+  .nav-label {
+    font-size: 10px; font-weight: 400;
+    color: rgba(255,255,255,0.45);
+    transition: color 0.15s;
+    letter-spacing: 0;
+  }
+  .nav-item.active .nav-label { color: white; }
+
+  /* ══════════════════════════════
+     TOAST
+  ══════════════════════════════ */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    color: white;
+    padding: 10px 22px; border-radius: 30px;
+    font-size: 14px; font-weight: 500;
+    opacity: 0; transition: all 0.28s ease;
+    z-index: 999; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ══════════════════════════════
+     INSTALL BANNER
+  ══════════════════════════════ */
+  .install-banner {
+    position: fixed; bottom: 70px; left: 16px; right: 16px;
+    background: white; border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    display: flex; align-items: center; gap: 12px;
+    z-index: 200;
+    transform: translateY(20px); opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .install-banner.visible { transform: translateY(0); opacity: 1; }
+  .install-banner .ib-icon {
+    width: 44px; height: 44px; background: #000; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .install-banner .ib-icon svg { width: 26px; height: 26px; fill: white; }
+  .install-banner .ib-text { flex: 1; }
+  .install-banner .ib-text strong { font-size: 14px; font-weight: 700; display: block; }
+  .install-banner .ib-text span { font-size: 12px; color: #888; }
+  .install-btn {
+    background: #000; color: white;
+    border: none; border-radius: 10px;
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; flex-shrink: 0;
+    font-family: inherit;
+  }
+  .install-close {
+    position: absolute; top: 8px; right: 10px;
+    font-size: 18px; color: #ccc; cursor: pointer; line-height: 1;
+  }
+
+  /* scrollbar hide everywhere */
+  * { scrollbar-width: none; }
+  *::-webkit-scrollbar { display: none; }
+</style>
 </head>
 <body>
+<div id="app">
 
-<div class="bg-blur"></div>
+  <!-- ════════════════════════════════
+       SCREEN: СТРІЧКА (HOME)
+  ════════════════════════════════ -->
+  <div class="screen active" id="screen-home">
+    <div class="status-bar"></div>
+    <div class="content">
 
-<div class="cards-viewport">
-    <div class="cards-track" id="cardsTrack">
-<div class="scene">
-    <div class="card" id="mainCard">
-        <div class="card__face card__face--front">
-            <div class="header">єДокумент</div>
-            
-            <div class="profile-section">
-                <img src="img/photo.png" alt="Фото" class="photo" id="userPhoto">
-                <div class="info-labels">
-                    <p>Дата народження:</p>
-                    <span>29.03.1995</span>
-                    <p>РНОКПП:</p>
-                    <span>3478608192</span>
-                </div>
-            </div>
+      <div class="home-greeting">Привіт, Богдан 👋</div>
 
-            <div class="marquee-container">
-                <div class="marquee-text">
-                    Ой у лузі червона калина похилилася, чогось наша славна Україна зажурилася. А ми тую червону калину, підіймемо, а ми нашу славну Україну, гей, гей, розвеселимо! Документ діє під час воєнного стану.
-                </div>
-            </div>
-
-            <div class="footer-info">
-                <div class="user-name">
-                    Толчинський<br>Владислав<br>Валерійович
-                </div>
-                <div class="menu-dots" id="menuBtn">...</div>
-            </div>
+      <!-- Незламність -->
+      <div class="nezlam-card">
+        <div class="nezlam-title">Незламність</div>
+        <div class="nezlam-desc">Мапа укриттів, Пунктів незламності та відділень Power Banking.<br>Заява про відсутній зв'язок.</div>
+        <div class="nezlam-footer">
+          <div class="nezlam-icons">
+            <div class="nezlam-icon-badge" style="background:#f5c518;">⚡</div>
+            <div class="nezlam-icon-badge" style="background:#1a73e8;">🔵</div>
+            <div class="nezlam-icon-badge" style="background:#2d8a4e;">🏛</div>
+          </div>
+          <div class="arrow-btn">
+            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
         </div>
+      </div>
 
-        <div class="card__face card__face--back">
-            <div class="qr-placeholder">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=BogdanPosobilov" alt="QR Code">
-            </div>
-            <p style="margin-top: 20px; font-weight: 600;">QR-код для перевірки</p>
+      <!-- Quick actions: Дія Сканер, Військові облігації, Відсутній зв'язок -->
+      <div class="quick-actions">
+        <div class="quick-action-item" onclick="showToast('Дія Сканер')">
+          <div class="qa-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 5h2V3H3v2zm0 8h2v-2H3v2zm0 8h2v-2H3v2zm4-4h10v-2H7v2zm0-4h10v-2H7v2zm0-8v2h10V5H7zM19 3v2h2V3h-2zm0 10h2v-2h-2v2zm0 8h2v-2h-2v2z"/></svg>
+          </div>
+          <div class="qa-label">Дія Сканер</div>
         </div>
+        <div class="quick-action-item" onclick="showToast('Військові облігації')">
+          <div class="qa-icon">
+            <!-- trident SVG -->
+            <svg viewBox="0 0 24 24" fill="white">
+              <path d="M12 2C10.5 2 9.5 3 9.5 4.2c0 .8.4 1.5 1 2L9 8H8C7 8 6 8.9 6 10c0 .6.3 1.2.7 1.6L5 13H4v2h1.5l1-2h2L7 15v5h2v-5l1-2h2l1 2v5h2v-5l-1.5-2h2l1 2H18v-2h-1l-1.7-1.4c.4-.4.7-1 .7-1.6 0-1.1-1-2-2-2h-1l-1.5-1.8c.6-.5 1-1.2 1-2C13.5 3 12.5 2 12 2z"/>
+            </svg>
+          </div>
+          <div class="qa-label">Військові<br>облігації</div>
+        </div>
+        <div class="quick-action-item" onclick="showToast('Відсутній зв\'язок')">
+          <div class="qa-icon">
+            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13zm-2.5 2.5L4 17l2-2-2-2-1.5 1.5zM19 13l2 2-2 2-2-2 2-2z"/></svg>
+          </div>
+          <div class="qa-label">Відсутній<br>зв'язок</div>
+        </div>
+      </div>
+
+      <!-- Лінія дронів banner -->
+      <div class="drone-banner" onclick="showToast('Лінія дронів')">
+        <div class="drone-banner-bg"></div>
+        <div class="drone-banner-shields"></div>
+        <div class="drone-banner-content">
+          <div class="drone-title-row">
+            <div class="drone-logo-box">
+              <svg viewBox="0 0 24 24" fill="white">
+                <path d="M12 2C10.5 2 9.5 3 9.5 4.2c0 .8.4 1.5 1 2L9 8H8C7 8 6 8.9 6 10c0 .6.3 1.2.7 1.6L5 13H4v2h1.5l1-2h2L7 15v5h2v-5l1-2h2l1 2v5h2v-5l-1.5-2h2l1 2H18v-2h-1l-1.7-1.4c.4-.4.7-1 .7-1.6 0-1.1-1-2-2-2h-1l-1.5-1.8c.6-.5 1-1.2 1-2C13.5 3 12.5 2 12 2z"/>
+              </svg>
+            </div>
+            <div class="drone-title">ЛІНІЯ<br>ДРОНІВ</div>
+          </div>
+          <div class="drone-footer">
+            <div class="drone-cta">Змінити хід подій</div>
+            <div class="arrow-btn-white">
+              <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Кешбек card -->
+      <div class="cashback-card">
+        <div class="cashback-amount">0.00 грн</div>
+        <div class="cashback-label">Накопичено кешбеку за червень</div>
+        <div class="cashback-bars">
+          <div class="cashback-bar" style="background:#0057b7;"></div>
+          <div class="cashback-bar" style="background:#0057b7;"></div>
+          <div class="cashback-bar" style="background:#0057b7;"></div>
+          <div class="cashback-bar" style="background:#ffd700;"></div>
+          <div class="cashback-bar" style="background:#ffd700;"></div>
+          <div class="cashback-bar" style="background:#ffd700;"></div>
+        </div>
+        <div class="cashback-footer">
+          <div class="arrow-btn" onclick="showToast('Кешбек')">
+            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </div>
+      </div>
+
     </div>
-</div>
-        <div class="scene">
-            <div class="card">
-                <div class="card__face card__face--front card__face--tax">
+  </div>
 
-                    <div class="header">Картка платника<br>податків</div>
-                    <div class="tax-label">РНОКПП</div>
+  <!-- ════════════════════════════════
+       SCREEN: ДОКУМЕНТИ
+  ════════════════════════════════ -->
+  <div class="screen animated-bg" id="screen-docs">
+    <div class="status-bar"></div>
 
-                    <div class="tax-name">
-                        Толчинський<br>Владислав<br>Валерійович
-                    </div>
+    <div class="docs-screen-content">
+      <div class="docs-carousel-outer">
+        <div class="docs-carousel" id="docsCarousel">
 
-                    <div class="tax-dob-label">Дата народження:</div>
-                    <div class="tax-dob">29.03.1995</div>
-
-                    <div class="marquee-container">
-                        <div class="marquee-text">
-                            Документ оновлено о 15:21 | 11.04.2026 • Перевірено • Документ діє під час воєнного стану.
-                        </div>
-                    </div>
-
-                    <div class="footer-info">
-                        <div class="tax-number">
-                            3478608192
-                            <span class="copy-icon">⧉</span>
-                        </div>
-                        <div class="menu-dots">···</div>
-                    </div>
-
+          <!-- 1. єДокумент -->
+          <div class="doc-card-new" onclick="showToast('єДокумент')">
+            <div class="doc-card-upper">
+              <div class="doc-card-type">єДокумент</div>
+              <div class="doc-card-photo-row">
+                <div class="doc-card-photo">
+                  <img src="img/photo.png" alt="Фото" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                  <svg style="display:none" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
                 </div>
+                <div class="doc-card-fields">
+                  <div class="doc-field-label">Дата<br>народження:</div>
+                  <div class="doc-field-value">13.02.1995</div>
+                  <div class="doc-field-label">РНОКПП:</div>
+                  <div class="doc-field-value">3474211794</div>
+                </div>
+              </div>
             </div>
+            <div class="doc-card-strip"><div class="doc-card-strip-inner"><span>Документ діє під час воєнного стану. Ой у лузі червона калина похилилась…</span><span>Документ діє під час воєнного стану. Ой у лузі червона калина похилилась…</span></div></div>
+            <div class="doc-card-footer">
+              <div class="doc-card-fullname">Пособілов<br>Богдан<br>Романович</div>
+              <div class="doc-more-btn">
+                <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Картка платника податків -->
+          <div class="doc-card-new" onclick="showToast('Картка платника податків')">
+            <div class="doc-card-upper">
+              <div class="doc-card-type">Картка платника<br>податків</div>
+              <div style="margin-top:4px;">
+                <div class="doc-field-label-only" style="font-size:15px;color:#000;margin-bottom:12px;">РНОКПП</div>
+                <div class="doc-field-label-only">Пособілов<br>Богдан<br>Романович</div>
+                <div style="height:14px;"></div>
+                <div class="doc-field-label-only">Дата народження:</div>
+                <div class="doc-field-value-only">13.02.1995</div>
+              </div>
+            </div>
+            <div class="doc-card-strip"><div class="doc-card-strip-inner"><span>Документ оновлено о 22:17 | 29.05.2026 • Перевірено державою • Дійсний документ</span><span>Документ оновлено о 22:17 | 29.05.2026 • Перевірено державою • Дійсний документ</span></div></div>
+            <div class="doc-rnokpp-num">
+              <span>3474211794</span>
+              <div class="doc-copy-btn" onclick="event.stopPropagation();showToast('Скопійовано')">
+                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              </div>
+              <div style="flex:1;"></div>
+              <div class="doc-more-btn">
+                <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Закордонний паспорт -->
+          <div class="doc-card-new" onclick="showToast('Закордонний паспорт')">
+            <div class="doc-card-upper">
+              <div class="doc-card-type">Закордонний<br>паспорт</div>
+              <div class="doc-card-photo-row">
+                <div class="doc-card-photo">
+                  <img src="img/photo.png" alt="Фото" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                  <svg style="display:none" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                </div>
+                <div class="doc-card-fields">
+                  <div class="doc-field-label">Дата<br>народження:</div>
+                  <div class="doc-field-value">13.02.1995</div>
+                  <div class="doc-field-label">Номер:</div>
+                  <div class="doc-field-value">FZ055437</div>
+                  <div style="font-size:18px;font-style:italic;color:#333;margin-top:4px;">Підпис</div>
+                </div>
+              </div>
+            </div>
+            <div class="doc-card-strip"><div class="doc-card-strip-inner"><span>Документ оновлено о 16:50 | 06.06.2026 • Документ дійсний • Перевірено державою</span><span>Документ оновлено о 16:50 | 06.06.2026 • Документ дійсний • Перевірено державою</span></div></div>
+            <div class="doc-card-footer">
+              <div class="doc-card-fullname">Пособілов<br>Богдан<br>Романович</div>
+              <div class="doc-more-btn">
+                <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Посвідчення водія -->
+          <div class="doc-card-new" onclick="showToast('Посвідчення водія')">
+            <div class="doc-card-upper">
+              <div class="doc-card-type">Посвідчення водія</div>
+              <div class="doc-card-photo-row">
+                <div class="doc-card-photo">
+                  <img src="img/photo.png" alt="Фото" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                  <svg style="display:none" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                </div>
+                <div class="doc-card-fields">
+                  <div class="doc-field-label">Дата<br>народження:</div>
+                  <div class="doc-field-value">13.02.1995</div>
+                  <div class="doc-field-label">Категорія:</div>
+                  <div class="doc-field-value">B</div>
+                  <div class="doc-field-label">Номер<br>документа:</div>
+                  <div class="doc-field-value">ВХХ054853</div>
+                </div>
+              </div>
+            </div>
+            <div class="doc-card-strip"><div class="doc-card-strip-inner"><span>Дійсне до 22.07.2044 • Документ оновлено о 16:50 | 06.06.2026 • Перевірено</span><span>Дійсне до 22.07.2044 • Документ оновлено о 16:50 | 06.06.2026 • Перевірено</span></div></div>
+            <div class="doc-card-footer">
+              <div class="doc-card-fullname">Пособілов<br>Богдан<br>Романович</div>
+              <div class="doc-more-btn">
+                <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Актовий запис про народження -->
+          <div class="doc-card-new" onclick="showToast('Актовий запис')">
+            <div class="doc-card-upper">
+              <div class="doc-card-type">Актовий запис про<br>моє народження</div>
+              <div style="margin-top:4px;">
+                <div class="doc-field-label-only">Свідоцтва про народження</div>
+                <div style="height:16px;"></div>
+                <div class="doc-field-label-only">Дата народження:</div>
+                <div class="doc-field-value-only">13.02.1995</div>
+                <div class="doc-field-label-only">Місце народження:</div>
+                <div class="doc-field-value-only">Україна, Запорізька область, Енергодар</div>
+              </div>
+            </div>
+            <div class="doc-card-strip"><div class="doc-card-strip-inner"><span>Документ оновлено о 16:50 | 06.06.2026 • Документ дійсний • Перевірено державою</span><span>Документ оновлено о 16:50 | 06.06.2026 • Документ дійсний • Перевірено державою</span></div></div>
+            <div class="doc-card-footer">
+              <div class="doc-card-fullname">Пособілов<br>Богдан<br>Романович</div>
+              <div class="doc-more-btn">
+                <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </div>
+            </div>
+          </div>
+
         </div>
+      </div>
+
+      <!-- Dot indicators -->
+      <div class="docs-dots" id="docsDots">
+        <div class="docs-dot active"></div>
+        <div class="docs-dot"></div>
+        <div class="docs-dot"></div>
+        <div class="docs-dot"></div>
+        <div class="docs-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN: СЕРВІСИ
+  ════════════════════════════════ -->
+  <div class="screen animated-bg" id="screen-services">
+    <div class="status-bar"></div>
+    <div class="content">
+      <div class="services-page-title">Сервіси</div>
+      <div class="services-search">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <span>Пошук</span>
+      </div>
+      <div class="services-grid-new">
+        <div class="service-tile" onclick="showToast('Допомога армії')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+          <div class="service-tile-label">Допомога армії</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Незламність')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg></div>
+          <div class="service-tile-label">Незламність</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Дія.Картка')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg></div>
+          <div class="service-tile-label">Дія.Картка</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Військові облігації')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M12 2C10.5 2 9.5 3 9.5 4.2c0 .8.4 1.5 1 2L9 8H8C7 8 6 8.9 6 10c0 .6.3 1.2.7 1.6L5 13H4v2h1.5l1-2h2L7 15v5h2v-5l1-2h2l1 2v5h2v-5l-1.5-2h2l1 2H18v-2h-1l-1.7-1.4c.4-.4.7-1 .7-1.6 0-1.1-1-2-2-2h-1l-1.5-1.8c.6-.5 1-1.2 1-2C13.5 3 12.5 2 12 2z"/></svg></div>
+          <div class="service-tile-label">Військові облігації</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Лінія дронів')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M21 3L3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z"/></svg></div>
+          <div class="service-tile-label">Лінія дронів</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Національний кешбек')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg></div>
+          <div class="service-tile-label">Національний кешбек</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Чатбот єВорог')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-4.41 3.57-7.99 7.99-8C16.42 4 20 7.58 20 12c0 4.42-3.58 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4zm-1 9h2v2h-2z"/></svg></div>
+          <div class="service-tile-label">Чатбот єВорог</div>
+        </div>
+        <div class="service-tile" onclick="showToast('єВідновлення')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z"/></svg></div>
+          <div class="service-tile-label">єВідновлення</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Міжнародний Реєстр збитків')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg></div>
+          <div class="service-tile-label">Міжнародний Реєстр збитків</div>
+        </div>
+        <div class="service-tile" onclick="showToast('Ветеранський спорт')">
+          <div class="service-tile-icon"><svg viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/></svg></div>
+          <div class="service-tile-label">Ветеранський спорт</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN: МЕНЮ
+  ════════════════════════════════ -->
+  <div class="screen animated-bg" id="screen-menu">
+    <div class="status-bar"></div>
+    <div class="content">
+      <div class="menu-title">Меню</div>
+      <div class="menu-version">Версія Дії: 4.32.1.2563</div>
+
+      <!-- Повідомлення -->
+      <div class="menu-group">
+        <div class="menu-row" onclick="showToast('Повідомлення')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </div>
+          <div class="menu-row-label">Повідомлення</div>
+        </div>
+      </div>
+
+      <!-- Підпис -->
+      <div class="menu-group">
+        <div class="menu-row" onclick="showToast('Дія.Підпис')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+          </div>
+          <div class="menu-row-label">Дія.Підпис</div>
+        </div>
+        <div class="menu-row" onclick="showToast('Історія підписань')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M8 16h8v2H8zm0-4h8v2H8zm6-10H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+          </div>
+          <div class="menu-row-label">Історія підписань</div>
+        </div>
+      </div>
+
+      <!-- Налаштування -->
+      <div class="menu-group">
+        <div class="menu-row" onclick="showToast('Налаштування')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+          </div>
+          <div class="menu-row-label">Налаштування</div>
+        </div>
+        <div class="menu-row" onclick="showToast('Оновити застосунок')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+          </div>
+          <div class="menu-row-label">Оновити застосунок</div>
+        </div>
+        <div class="menu-row" onclick="showToast('Підключені пристрої')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M15.5 5H11c-2.8 0-5 2.2-5 5s2.2 5 5 5h.5v2H11c-3.9 0-7-3.1-7-7s3.1-7 7-7h4.5V1l5 4-5 4V5zM13 12h.5v2H13v-2zm2.5 5H11c-2.8 0-5-2.2-5-5v-1H4v1c0 3.9 3.1 7 7 7h4.5v2l5-4-5-4v3z"/></svg>
+          </div>
+          <div class="menu-row-label">Підключені пристрої</div>
+        </div>
+      </div>
+
+      <!-- Підтримка -->
+      <div class="menu-group">
+        <div class="menu-row" onclick="showToast('Служба підтримки')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+          </div>
+          <div class="menu-row-label">Служба підтримки</div>
+        </div>
+        <div class="menu-row" onclick="showToast('Скопійовано')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          </div>
+          <div class="menu-row-label">Копіювати номер пристрою</div>
+        </div>
+        <div class="menu-row" onclick="showToast('Питання та відповіді')">
+          <div class="menu-row-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+          </div>
+          <div class="menu-row-label">Питання та відповіді</div>
+        </div>
+      </div>
+
+      <button class="menu-logout-btn" onclick="showToast('Виходимо...')">Вийти</button>
 
     </div>
-</div>
-<div class="dots">
-    <span class="dot active"></span>
-    <span class="dot"></span>
-    <span class="dot"></span>
-    <span class="dot"></span>
-    <span class="dot"></span>
+  </div>
+
+  <!-- ════════════════════════════════
+       BOTTOM NAV
+  ════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="showScreen('home')">
+      <div class="nav-icon-wrap">
+        <!-- стрічка icon: stacked lines with image -->
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5zm0 4h16v2H4V9zm0 4h10v2H4v-2zm0 4h10v2H4v-2zm12 0l3 3 3-3h-2v-4h-2v4h-2z"/></svg>
+      </div>
+      <div class="nav-label">Стрічка</div>
+    </div>
+    <div class="nav-item" id="nav-docs" onclick="showScreen('docs')">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+      </div>
+      <div class="nav-label">Документи</div>
+    </div>
+    <div class="nav-item" id="nav-services" onclick="showScreen('services')">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+      </div>
+      <div class="nav-label">Сервіси</div>
+    </div>
+    <div class="nav-item" id="nav-menu" onclick="showScreen('menu')">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <div class="nav-label">Меню</div>
+    </div>
+  </nav>
+
 </div>
 
-<nav class="tab-bar">
-    <a href="#" class="tab-item active"><div class="tab-icon"></div>Документи</a>
-    <a href="#" class="tab-item"><div class="tab-icon"></div>Сервіси</a>
-    <a href="#" class="tab-item"><div class="tab-icon"></div>Повідомлення</a>
-    <a href="#" class="tab-item"><div class="tab-icon"></div>Меню</a>
-</nav>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
-<script src="code.js"></script>
-<script src="swipe.js"></script>
+<!-- INSTALL BANNER -->
+<div class="install-banner" id="installBanner">
+  <div class="ib-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+  </div>
+  <div class="ib-text">
+    <strong>Встановити Дія</strong>
+    <span>Додати на екран</span>
+  </div>
+  <button class="install-btn" id="installBtn">Додати</button>
+  <span class="install-close" onclick="dismissInstall()">×</span>
+</div>
+
+<script>
+  let currentScreen = 'home';
+  let prevScreen = 'home';
+  let deferredPrompt = null;
+
+  // ─── NAVIGATION ───
+  function showScreen(name) {
+    if (name === currentScreen) return;
+    const current = document.getElementById('screen-' + currentScreen);
+    const next = document.getElementById('screen-' + name);
+    if (!next) return;
+
+    current.classList.remove('active');
+    current.classList.add('out');
+    setTimeout(() => current.classList.remove('out'), 350);
+
+    next.style.transform = 'translateX(30px)';
+    next.classList.add('active');
+    requestAnimationFrame(() => { next.style.transform = ''; });
+
+    // update nav
+    ['home','docs','services','menu'].forEach(id => {
+      const el = document.getElementById('nav-' + id);
+      if (el) el.classList.toggle('active', id === name);
+    });
+
+    prevScreen = currentScreen;
+    currentScreen = name;
+  }
+
+  function goBack() {
+    showScreen(prevScreen === currentScreen ? 'home' : prevScreen);
+  }
+
+  // ─── DOCS CAROUSEL DOT SYNC ───
+  const carousel = document.getElementById('docsCarousel');
+  const dots = document.querySelectorAll('.docs-dot');
+
+  if (carousel) {
+    carousel.addEventListener('scroll', () => {
+      const cards = carousel.querySelectorAll('.doc-card-new');
+      const scrollLeft = carousel.scrollLeft;
+      const cardWidth = cards[0] ? cards[0].offsetWidth + 14 : 300;
+      const idx = Math.round(scrollLeft / cardWidth);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }, { passive: true });
+  }
+
+  // ─── TOAST ───
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ─── PWA INSTALL ───
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    setTimeout(() => {
+      document.getElementById('installBanner').classList.add('visible');
+    }, 3000);
+  });
+
+  document.getElementById('installBtn').addEventListener('click', () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    }
+    dismissInstall();
+    showToast('Додаємо на головний екран...');
+  });
+
+  function dismissInstall() {
+    document.getElementById('installBanner').classList.remove('visible');
+  }
+
+  // ─── SERVICE WORKER ───
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  // ─── PREVENT SCROLL BOUNCE (iOS) ───
+  document.addEventListener('touchmove', e => {
+    if (e.target.closest('.content') || e.target.closest('.docs-carousel')) return;
+    e.preventDefault();
+  }, { passive: false });
+</script>
 </body>
 </html>
